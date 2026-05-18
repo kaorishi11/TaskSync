@@ -56,16 +56,13 @@ TaskSync/
 ├── logout.php
 └── README.md
 
----
-
+```
 # Banco de Dados
 
 Importe o arquivo:
-
-```sql
+``
 tarefas.sql
-```
-
+``
 no **phpMyAdmin** ou outro gerenciador MySQL.
 
 ---
