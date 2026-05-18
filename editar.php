@@ -2,11 +2,24 @@
 session_start();
 require 'conexao.php';
 
-if (!isset($_SESSION['usuario_id'])) {
-    header("Location: index.php");
+if (!isset($_SESSION['usuario_id']) || !isset($_GET['id'])) {
+    header("Location: gerenciamento.php");
     exit();
 }
 
+$id = $_GET['id'];
+$idUsuario = $_SESSION['usuario_id'];
+
+$stmt = $conexao->prepare("SELECT * FROM tarefas WHERE id_tarefa = ? AND id_usuario = ?");
+$stmt->bind_param("ii", $id, $idUsuario);
+$stmt->execute();
+$resultado = $stmt->get_result();
+
+if ($resultado->num_rows == 0) {
+    header("Location: gerenciamento.php");
+    exit();
+}
+$tarefa = $resultado->fetch_assoc();
 $mensagem = '';
 $sucesso = '';
 
@@ -14,18 +27,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $descricao = trim($_POST['descricao']);
     $setor = trim($_POST['setor']);
     $prioridade = $_POST['prioridade'];
-    $idUsuario = $_SESSION['usuario_id'];
+    $status = $_POST['status'];
 
     if (empty($descricao) || empty($setor)) {
         $mensagem = "Preencha todos os campos obrigatórios.";
     } else {
-        $stmt = $conexao->prepare("INSERT INTO tarefas (id_usuario, descricao, setor, prioridade) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("isss", $idUsuario, $descricao, $setor, $prioridade);
-        if ($stmt->execute()) {
-            $sucesso = "Tarefa criada com sucesso! Redirecionando...";
-            echo '<meta http-equiv="refresh" content="2;url=gerenciamento.php">';
+        $update = $conexao->prepare("UPDATE tarefas SET descricao=?, setor=?, prioridade=?, status=? WHERE id_tarefa=? AND id_usuario=?");
+        $update->bind_param("ssssii", $descricao, $setor, $prioridade, $status, $id, $idUsuario);
+        if ($update->execute()) {
+            $sucesso = "Tarefa atualizada com sucesso!";
+            $tarefa['descricao'] = $descricao;
+            $tarefa['setor'] = $setor;
+            $tarefa['prioridade'] = $prioridade;
+            $tarefa['status'] = $status;
         } else {
-            $mensagem = "Erro ao criar tarefa.";
+            $mensagem = "Erro ao atualizar tarefa.";
         }
     }
 }
@@ -35,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskSync - Nova Tarefa</title>
+    <title>TaskSync - Editar Tarefa</title>
     <style>
         * {
             margin: 0;
@@ -107,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         .form-group textarea {
             resize: vertical;
-            min-height: 120px;
+            min-height: 110px;
         }
 
         .form-group input:focus,
@@ -117,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             box-shadow: 0 0 0 3px rgba(128, 146, 137, 0.15);
         }
 
-        .btn-create {
+        .btn-save {
             width: 100%;
             padding: 14px;
             background: #2d4a3a;
@@ -131,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             margin-top: 12px;
         }
 
-        .btn-create:hover {
+        .btn-save:hover {
             background: #4a7a5a;
             transform: translateY(-2px);
         }
@@ -190,36 +206,44 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body>
 <div class="container">
     <div class="header">
-        <h1>Nova tarefa</h1>
-        <p>Adicione uma nova atividade ao seu quadro</p>
+        <h1>Editar tarefa</h1>
+        <p>Altere as informações da sua tarefa</p>
     </div>
 
     <?php if($sucesso): ?>
-        <div class="message success">✓ <?= $sucesso ?></div>
+        <div class="message success">✓ <?php echo $sucesso; ?></div>
     <?php endif; ?>
 
     <?php if($mensagem): ?>
-        <div class="message error">⚠ <?= $mensagem ?></div>
+        <div class="message error">⚠ <?php echo $mensagem; ?></div>
     <?php endif; ?>
 
     <form method="POST">
         <div class="form-group">
-            <label>Descrição da tarefa</label>
-            <textarea name="descricao" placeholder="Descreva o que precisa ser feito..." required></textarea>
+            <label>Descrição</label>
+            <textarea name="descricao" required><?php echo htmlspecialchars($tarefa['descricao']); ?></textarea>
         </div>
         <div class="form-group">
             <label>Setor / Departamento</label>
-            <input type="text" name="setor" placeholder="Ex: Marketing, TI, Financeiro..." required>
+            <input type="text" name="setor" value="<?php echo htmlspecialchars($tarefa['setor']); ?>" required>
         </div>
         <div class="form-group">
             <label>Prioridade</label>
             <select name="prioridade">
-                <option value="baixa">Baixa prioridade</option>
-                <option value="media" selected>Média prioridade</option>
-                <option value="alta">Alta prioridade</option>
+                <option value="baixa" <?php echo ($tarefa['prioridade'] == 'baixa') ? 'selected' : ''; ?>>Baixa</option>
+                <option value="media" <?php echo ($tarefa['prioridade'] == 'media') ? 'selected' : ''; ?>>Média</option>
+                <option value="alta" <?php echo ($tarefa['prioridade'] == 'alta') ? 'selected' : ''; ?>>Alta</option>
             </select>
         </div>
-        <button type="submit" class="btn-create">Criar tarefa</button>
+        <div class="form-group">
+            <label>Status</label>
+            <select name="status">
+                <option value="a fazer" <?php echo ($tarefa['status'] == 'a fazer') ? 'selected' : ''; ?>>A Fazer</option>
+                <option value="fazendo" <?php echo ($tarefa['status'] == 'fazendo') ? 'selected' : ''; ?>>Fazendo</option>
+                <option value="concluido" <?php echo ($tarefa['status'] == 'concluido') ? 'selected' : ''; ?>>Concluído</option>
+            </select>
+        </div>
+        <button type="submit" class="btn-save">Salvar alterações</button>
     </form>
 
     <hr>

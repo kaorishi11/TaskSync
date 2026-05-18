@@ -8,221 +8,244 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = trim($_POST['nome']);
     $email = trim($_POST['email']);
     $senha = password_hash($_POST['senha'], PASSWORD_DEFAULT);
-
     $foto = null;
 
-    $check = $conn->prepare("SELECT id_usuario FROM usuarios WHERE email = ?");
+    $check = $conexao->prepare("SELECT id_usuario FROM usuarios WHERE email = ?");
     $check->bind_param('s', $email);
     $check->execute();
-
     $result = $check->get_result();
 
     if ($result->num_rows > 0) {
-        $erro = 'Este e-mail já está cadastrado!';
+        $erro = 'Este e-mail já está cadastrado.';
     }
 
     if (!$erro && !empty($_FILES['foto']['name'])) {
         $pasta = 'uploads/';
-        if (!is_dir($pasta)) {
-            mkdir($pasta, 0777, true);
-        }
+        if (!is_dir($pasta)) mkdir($pasta, 0777, true);
         $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
         if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])) {
-
             $foto = $pasta . time() . '_' . uniqid() . '.' . $ext;
-
             move_uploaded_file($_FILES['foto']['tmp_name'], $foto);
         } else {
-            $erro = 'Tipo de arquivo inválido!';
+            $erro = 'Formato de imagem inválido (use JPG, PNG ou GIF).';
         }
     }
 
     if (!$erro) {
-        $stmt = $conn->prepare("
-            INSERT INTO usuarios (nome, email, senha, foto)
-            VALUES (?, ?, ?, ?)
-        ");
+        $stmt = $conexao->prepare("INSERT INTO usuarios (nome, email, senha, foto) VALUES (?, ?, ?, ?)");
         $stmt->bind_param('ssss', $nome, $email, $senha, $foto);
         if ($stmt->execute()) {
             header('Location: index.php?msg=conta_criada');
             exit;
         } else {
-            $erro = 'Erro ao cadastrar!';
+            $erro = 'Erro interno ao cadastrar.';
         }
     }
 }
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
-    <head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro</title>
+    <title>TaskSync - Cadastro</title>
     <style>
-        *{
-            margin:0;
-            padding:0;
-            box-sizing:border-box;
-            font-family: Arial, Helvetica, sans-serif;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        body{
-            height:100vh;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            background:#f2f2f2;
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #eef5ea;
+            font-family: 'Segoe UI', system-ui, -apple-system, 'Roboto', sans-serif;
+            padding: 20px;
         }
-        .container{
-            width:950px;
-            height:600px;
-            background:white;
-            border-radius:20px;
-            overflow:hidden;
-            display:flex;
-            box-shadow:0 10px 30px rgba(0,0,0,0.2);
+
+        .card {
+            display: flex;
+            max-width: 1000px;
+            width: 100%;
+            background: linear-gradient(300deg, #809289, #C4D4A9);
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
         }
-        .left{
-            width:50%;
-            background:linear-gradient(135deg, #1DB954, #169c46);
-            color:white;
-            display:flex;
-            flex-direction:column;
-            justify-content:center;
-            align-items:center;
-            text-align:center;
-            padding:40px;
+
+        .hero {
+            flex: 1;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 48px 32px;
         }
-        .left img{
-            width:130px;
-            margin-bottom:20px;
+
+        .hero img {
+            width: 160px;
+            margin-bottom: 24px;
         }
-        .left h1{
-            font-size:38px;
-            margin-bottom:15px;
+
+        .hero p {
+            color: #5a7a6a;
+            max-width: 260px;
+            font-size: 0.95rem;
+            line-height: 1.5;
         }
-        .left p{
-            font-size:18px;
-            max-width:300px;
+
+        .register-form {
+            flex: 1;
+            padding: 48px 44px;
         }
-        .right{
-            width:50%;
-            padding:50px;
-            display:flex;
-            flex-direction:column;
-            justify-content:center;
+
+        .register-form h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d4a3a;
+            margin-bottom: 8px;
         }
-        .right h2{
-            margin-bottom:10px;
-            color:#222;
+
+        .register-form .sub {
+            color: #3a5a4a;
+            margin-bottom: 28px;
+            font-size: 0.9rem;
         }
-        .right .sub{
-            color:#777;
-            margin-bottom:25px;
+
+        .input-group {
+            margin-bottom: 18px;
         }
-        form{
-            display:flex;
-            flex-direction:column;
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #2d4a3a;
+            font-size: 0.85rem;
         }
-        input{
-            padding:14px;
-            margin-bottom:15px;
-            border:1px solid #ccc;
-            border-radius:10px;
-            outline:none;
-            transition:0.3s;
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid #d4e0d4;
+            border-radius: 16px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s;
+            background: #fefefe;
         }
-        input:focus{
-            border-color:#1DB954;
+
+        .input-group input:focus {
+            border-color: #5a8a6a;
+            box-shadow: 0 0 0 3px rgba(90, 138, 106, 0.1);
         }
-        input[type="file"]{
-            padding:10px;
+
+        .input-group input[type="file"] {
+            padding: 10px;
         }
-        button{
-            padding:14px;
-            border:none;
-            border-radius:10px;
-            background:#1DB954;
-            color:white;
-            font-size:16px;
-            cursor:pointer;
-            transition:0.3s;
+
+        .btn-register {
+            width: 100%;
+            padding: 14px;
+            background: #2d4a3a;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 8px;
         }
-        button:hover{
-            background:#169c46;
+
+        .btn-register:hover {
+            background: #4a7a5a;
+            transform: translateY(-1px);
         }
-        .erro{
-            background:#ffdede;
-            color:#d8000c;
-            padding:12px;
-            border-radius:10px;
-            margin-bottom:15px;
+
+        .login-link {
+            text-align: center;
+            margin-top: 24px;
+            color: #2d4a3a;
         }
-        .login-link{
-            margin-top:20px;
-            text-align:center;
+
+        .login-link a {
+            color: #2d4a3a;
+            text-decoration: none;
+            font-weight: 600;
         }
-        .login-link a{
-            color:#1DB954;
-            text-decoration:none;
-            font-weight:bold;
+
+        .login-link a:hover {
+            text-decoration: underline;
         }
-        @media(max-width: 768px){
-            .container{
-                flex-direction:column;
-                width:95%;
-                height:auto;
+
+        .error-message {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 12px 16px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            font-size: 0.85rem;
+            border-left: 4px solid #b91c1c;
+        }
+
+        @media (max-width: 750px) {
+            .card {
+                flex-direction: column;
+                max-width: 450px;
             }
-            .left,
-            .right{
-                width:100%;
+            .register-form, .hero {
+                padding: 36px 28px;
             }
-            .left{
-                padding:50px 20px;
+            .hero img {
+                width: 120px;
             }
         }
     </style>
-    </head>
-    <body>
-    <div class="container">
-        <div class="left">
-            <img src="../images/logo.png" alt="Logo">
-            <h1>Bem-vindo!</h1>
-            <p>Crie sua conta e organize suas tarefas com facilidade e rapidez.</p>
-        </div>
-        <div class="right">
-            <h2>Criar Conta</h2>
-            <p class="sub">Preencha os dados abaixo</p>
-            <?php if($erro): ?>
-                <div class="erro"><?= $erro ?></div>
-            <?php endif; ?>
-            <form method="POST" enctype="multipart/form-data">
-                <input
-                    type="text"
-                    name="nome"
-                    placeholder="Digite seu nome"
-                    required
-                >
-                <input
-                    type="email"
-                    name="email"
-                    placeholder="Digite seu email"
-                    required
-                >
-                <input
-                    type="password"
-                    name="senha"
-                    placeholder="Digite sua senha"
-                    required
-                >
-                <input
-                    type="file"
-                    name="foto"
-                    accept="image/*"
-                >
-                <button type="submit">Cadastrar</button>
-            </form>
-            <div class="login-link">Já possui conta?<a href="index.php">Fazer login</a></div>
+</head>
+<body>
+<div class="card">
+    <div class="hero">
+        <img src="images/logo.png" alt="TaskSync Solutions">
+        <p>Junte-se a nós e simplifique seu dia a dia.</p>
+    </div>
+    <div class="register-form">
+        <h1>Criar conta</h1>
+        <p class="sub">Preencha os campos abaixo</p>
+
+        <?php if($erro): ?>
+            <div class="error-message"><?= $erro ?></div>
+        <?php endif; ?>
+
+        <form method="POST" enctype="multipart/form-data">
+            <div class="input-group">
+                <label>Nome completo</label>
+                <input type="text" name="nome" placeholder="Seu nome" required>
+            </div>
+            <div class="input-group">
+                <label>E-mail</label>
+                <input type="email" name="email" placeholder="seu@email.com" required>
+            </div>
+            <div class="input-group">
+                <label>Senha</label>
+                <input type="password" name="senha" placeholder="••••••••" required>
+            </div>
+            <div class="input-group">
+                <label>Foto de perfil (opcional)</label>
+                <input type="file" name="foto" accept="image/*">
+            </div>
+            <button type="submit" class="btn-register">Cadastrar</button>
+        </form>
+
+        <div class="login-link">
+            Já possui conta? <a href="index.php">Fazer login</a>
         </div>
     </div>
-    </body>
+</div>
+</body>
 </html>

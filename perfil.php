@@ -7,25 +7,44 @@ if (!isset($_SESSION['usuario_id'])) {
     exit();
 }
 
+$idUsuario = $_SESSION['usuario_id'];
+
+$stmt = $conexao->prepare("SELECT * FROM usuarios WHERE id_usuario = ?");
+$stmt->bind_param("i", $idUsuario);
+$stmt->execute();
+$usuario = $stmt->get_result()->fetch_assoc();
 $mensagem = '';
 $sucesso = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $descricao = trim($_POST['descricao']);
-    $setor = trim($_POST['setor']);
-    $prioridade = $_POST['prioridade'];
-    $idUsuario = $_SESSION['usuario_id'];
+    $nome = trim($_POST['nome']);
+    $email = trim($_POST['email']);
+    $foto = $usuario['foto'];
 
-    if (empty($descricao) || empty($setor)) {
-        $mensagem = "Preencha todos os campos obrigatórios.";
-    } else {
-        $stmt = $conexao->prepare("INSERT INTO tarefas (id_usuario, descricao, setor, prioridade) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("isss", $idUsuario, $descricao, $setor, $prioridade);
-        if ($stmt->execute()) {
-            $sucesso = "Tarefa criada com sucesso! Redirecionando...";
-            echo '<meta http-equiv="refresh" content="2;url=gerenciamento.php">';
+    if (!empty($_FILES['foto']['name'])) {
+        $pasta = 'uploads/';
+        if (!is_dir($pasta)) mkdir($pasta, 0777, true);
+        $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
+        if (in_array($ext, ['jpg','jpeg','png','gif'])) {
+            $foto = $pasta . time() . '_' . uniqid() . '.' . $ext;
+            move_uploaded_file($_FILES['foto']['tmp_name'], $foto);
         } else {
-            $mensagem = "Erro ao criar tarefa.";
+            $mensagem = "Formato inválido. Use JPG, PNG ou GIF.";
+        }
+    }
+
+    if (empty($mensagem)) {
+        $update = $conexao->prepare("UPDATE usuarios SET nome=?, email=?, foto=? WHERE id_usuario=?");
+        $update->bind_param("sssi", $nome, $email, $foto, $idUsuario);
+        if ($update->execute()) {
+            $_SESSION['usuario_nome'] = $nome;
+            $_SESSION['usuario_foto'] = $foto;
+            $sucesso = "Perfil atualizado com sucesso!";
+            $usuario['nome'] = $nome;
+            $usuario['email'] = $email;
+            $usuario['foto'] = $foto;
+        } else {
+            $mensagem = "Erro ao atualizar perfil.";
         }
     }
 }
@@ -35,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskSync - Nova Tarefa</title>
+    <title>TaskSync - Meu Perfil</title>
     <style>
         * {
             margin: 0;
@@ -54,12 +73,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         .container {
-            max-width: 580px;
+            max-width: 560px;
             width: 100%;
             background: white;
             border-radius: 32px;
             padding: 44px 40px;
             box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.25);
+            transition: all 0.2s;
         }
 
         .header {
@@ -68,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         .header h1 {
-            font-size: 1.9rem;
+            font-size: 2rem;
             font-weight: 700;
             color: #2d4a3a;
             margin-bottom: 8px;
@@ -77,6 +97,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         .header p {
             color: #5a7a6a;
             font-size: 0.9rem;
+        }
+
+        .profile-image {
+            text-align: center;
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .profile-image img {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+            border: 4px solid #C4D4A9;
         }
 
         .form-group {
@@ -89,11 +124,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             font-weight: 600;
             color: #2d4a3a;
             font-size: 0.85rem;
+            letter-spacing: 0.3px;
         }
 
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
+        .form-group input {
             width: 100%;
             padding: 14px 18px;
             border: 1.5px solid #e2ece2;
@@ -102,22 +136,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             outline: none;
             transition: all 0.2s;
             background: #fefefe;
-            font-family: inherit;
         }
 
-        .form-group textarea {
-            resize: vertical;
-            min-height: 120px;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
+        .form-group input:focus {
             border-color: #809289;
             box-shadow: 0 0 0 3px rgba(128, 146, 137, 0.15);
         }
 
-        .btn-create {
+        .form-group input[type="file"] {
+            padding: 12px;
+            background: #f8faf8;
+        }
+
+        .btn-save {
             width: 100%;
             padding: 14px;
             background: #2d4a3a;
@@ -131,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             margin-top: 12px;
         }
 
-        .btn-create:hover {
+        .btn-save:hover {
             background: #4a7a5a;
             transform: translateY(-2px);
         }
@@ -141,6 +172,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             border-radius: 20px;
             margin-bottom: 24px;
             font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .message.success {
@@ -181,6 +215,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             .container {
                 padding: 32px 24px;
             }
+            .profile-image img {
+                width: 100px;
+                height: 100px;
+            }
             .header h1 {
                 font-size: 1.6rem;
             }
@@ -190,8 +228,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body>
 <div class="container">
     <div class="header">
-        <h1>Nova tarefa</h1>
-        <p>Adicione uma nova atividade ao seu quadro</p>
+        <h1>Meu perfil</h1>
+        <p>Gerencie suas informações pessoais</p>
     </div>
 
     <?php if($sucesso): ?>
@@ -202,24 +240,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <div class="message error">⚠ <?= $mensagem ?></div>
     <?php endif; ?>
 
-    <form method="POST">
+    <div class="profile-image">
+        <?php if($usuario['foto']): ?>
+            <img src="<?= $usuario['foto'] ?>" alt="Foto de perfil">
+        <?php else: ?>
+            <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Avatar padrão">
+        <?php endif; ?>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data">
         <div class="form-group">
-            <label>Descrição da tarefa</label>
-            <textarea name="descricao" placeholder="Descreva o que precisa ser feito..." required></textarea>
+            <label>Nome completo</label>
+            <input type="text" name="nome" value="<?= htmlspecialchars($usuario['nome']) ?>" required>
         </div>
         <div class="form-group">
-            <label>Setor / Departamento</label>
-            <input type="text" name="setor" placeholder="Ex: Marketing, TI, Financeiro..." required>
+            <label>E-mail</label>
+            <input type="email" name="email" value="<?= htmlspecialchars($usuario['email']) ?>" required>
         </div>
         <div class="form-group">
-            <label>Prioridade</label>
-            <select name="prioridade">
-                <option value="baixa">Baixa prioridade</option>
-                <option value="media" selected>Média prioridade</option>
-                <option value="alta">Alta prioridade</option>
-            </select>
+            <label>Foto de perfil</label>
+            <input type="file" name="foto" accept="image/*">
         </div>
-        <button type="submit" class="btn-create">Criar tarefa</button>
+        <button type="submit" class="btn-save">Salvar alterações</button>
     </form>
 
     <hr>
