@@ -1,38 +1,131 @@
 # TaskSync - Sistema de Gerenciamento de Tarefas
 
-![TaskSync Logo](images/logo.png)
+O **TaskSync** é uma aplicação web desenvolvida para gerenciamento de tarefas corporativas utilizando o conceito de quadro Kanban.
 
-## Sobre o Projeto
+O sistema permite:
 
-**TaskSync Solutions** é uma aplicação web desenvolvida para gerenciamento de tarefas, permitindo que empresas e colaboradores organizem suas atividades em três colunas: **A Fazer**, **Fazendo** e **Concluído**.
-
-O sistema foi desenvolvido como solução para uma empresa fictícia que migrou de quadros físicos para uma plataforma digital, visando maior integração e visibilidade entre os setores.
-
----
-
-## Identidade Visual
-
-- **Fonte:** Segoe UI, system-ui, Roboto
-- **Logotipo:** Personalizado (TaskSync Solutions)
-- **Paleta de Cores:**
-  - Verde escuro: `#2d4a3a` (botões, títulos)
-  - Verde médio: `#4a7a5a` (hover)
-  - Verde claro: `#C4D4A9` (gradiente de fundo)
-  - Cinza-esverdeado: `#809289` (gradiente de fundo)
-  - Branco: `#ffffff` (cards e formulários)
+- Cadastro de usuários
+- Cadastro de tarefas
+- Edição e exclusão de tarefas
+- Organização por status:
+  - A Fazer
+  - Fazendo
+  - Concluído
+- Alteração de status das tarefas
+- Perfil do usuário com foto
+- Interface responsiva e moderna
 
 ---
 
-## Credenciais de Teste (Pré-cadastradas)
+# Tecnologias Utilizadas
 
-### Email
+- HTML5
+- CSS3
+- JavaScript
+- PHP
+- MySQL
+- XAMPP
 
-- kaorishimada11@gmail.com
+---
 
-### Senha
+# Estrutura de Pastas
 
-- 123456
+```bash
+TaskSync/
+│
+├── database/
+│   ├── tarefas.sql
+│
+├── docs/
+│   ├── ERDDiagram.png
+│   └── UseCaseDiagram.png
+│
+├── images/
+│   └── logo.png
+│
+├── uploads/
+│
+├── conexao.php
+├── index.php
+├── cadastro.php
+├── gerenciamento.php
+├── cadastrotarefas.php
+├── editar.php
+├── excluir.php
+├── perfil.php
+├── logout.php
+└── README.md
 
-## Desenvolvedor
+---
+
+# Banco de Dados
+
+Importe o arquivo:
+
+```sql
+tarefas.sql
+```
+
+no **phpMyAdmin** ou outro gerenciador MySQL.
+
+---
+
+# Como Executar o Projeto
+
+## 1 Clonar o repositório
+
+```bash
+git clone https://github.com/kaorishi11/TaskSync.git
+```
+
+---
+
+## 2 Mover para o XAMPP
+
+Coloque a pasta do projeto dentro de:
+
+```bash
+htdocs
+```
+
+Exemplo:
+
+```bash
+C:\xampp\htdocs\TaskSync
+```
+
+---
+
+## 3 Iniciar o servidor
+
+Abra o **XAMPP** e inicie:
+
+- Apache
+- MySQL
+
+---
+
+# Como Acessar
+
+Abra no navegador:
+
+```bash
+http://localhost/TaskSync
+```
+
+---
+
+# Usuário para Teste
+
+## Login
+
+```txt
+Email: kaorishimada11@gmail.com
+Senha: 123456
+```
+
+---
+
+# Desenvolvedor
 
 - kaorishi11
