@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 18/05/2026 às 03:30
+-- Tempo de geração: 18/05/2026 às 14:05
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -44,7 +44,9 @@ INSERT INTO `tarefas` (`id_tarefa`, `id_usuario`, `descricao`, `setor`, `priorid
 (5, 1, 'Produzir o Caso de Uso', 'TI', 'media', 'fazendo'),
 (6, 1, 'Fazer o banco no xampp', 'DS', 'alta', 'fazendo'),
 (7, 1, 'Realizar o site em php', 'DS', 'alta', 'a fazer'),
-(8, 1, 'Produzir a identidade', 'Markenting', 'alta', 'concluido');
+(8, 1, 'Produzir a identidade', 'Markenting', 'alta', 'concluido'),
+(9, 2, 'Realizar o site da empresa VIRTUAL HEALTH', 'DS', 'alta', 'fazendo'),
+(10, 2, 'PITCH', 'Markenting', 'media', 'a fazer');
 
 -- --------------------------------------------------------
 
@@ -66,7 +68,8 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id_usuario`, `nome`, `email`, `foto`, `senha`, `criado_em`) VALUES
-(1, 'Kaori', 'kaorishimada11@gmail.com', 'uploads/1779060777_6a0a50295492d.jpg', '$2y$10$rWBZBjtCNFY5Q45NbZE2OOSeH8Epsvoo59jgI1W7dHCNoFkbtKPe.', '2026-05-17 23:32:57');
+(1, 'Kaori', 'kaorishimada11@gmail.com', 'uploads/1779060777_6a0a50295492d.jpg', '$2y$10$rWBZBjtCNFY5Q45NbZE2OOSeH8Epsvoo59jgI1W7dHCNoFkbtKPe.', '2026-05-17 23:32:57'),
+(2, 'Milii', 'jamilefranquilim@gmail.com', 'uploads/1779102583_6a0af377858df.jpg', '$2y$10$QB6e0a0yNOUTeA6K6cLRpuk0Z1ECXxynleelONqTgvqXB7/BFZy5u', '2026-05-18 11:06:44');
 
 --
 -- Índices para tabelas despejadas
@@ -94,13 +97,13 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de tabela `tarefas`
 --
 ALTER TABLE `tarefas`
-  MODIFY `id_tarefa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id_tarefa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT de tabela `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Restrições para tabelas despejadas
