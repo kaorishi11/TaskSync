@@ -112,12 +112,15 @@ http://localhost/TaskSync
 
 ---
 
-# Usuário para Teste
-
-## Login
+# Usuários para Teste
 
 ```txt
 Email: kaorishimada11@gmail.com
+Senha: 123456
+```
+
+```txt
+Email: jamilefranquilim@gmail.com
 Senha: 123456
 ```
 
